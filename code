@@ -96,12 +96,13 @@ while True:
             Sg.popup("Rating input error")
             continue
         # Validate if filter is selected
-        if values['t_input'] == "" or values['t_input'] not in str(entries) or values['p_input']\
-                == "" or values['p_input'] not in str(entries):
+        if values['t_input'] == "" or values['t_input'].lower() not in str(entries).lower() \
+                or values['p_input'] == "" or values['p_input'].lower() not in str(entries).lower():
             Sg.popup("No filter selected")
             continue
         for entry in entries:  # List in lists
-            if values['t_input'] in str(entry) and values['p_input'] in str(entry):  # If inputs are valid
+            # If inputs are valid
+            if values['t_input'].lower() in str(entry).lower() and values['p_input'].lower() in str(entry).lower():
                 entry[6] = values['newRating']  # Change rating value for filter
         with open('newData.csv', 'w', newline='') as new_csv:  # Opening csv writer
             writer = csv.writer(new_csv)  # Writer object
