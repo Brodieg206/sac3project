@@ -1,0 +1,128 @@
+# Programmer: Brodie
+# Date: 1/03/24  # Description: Task 3 SAC
+import csv
+import PySimpleGUI as Sg
+
+# Setting theme of window
+Sg.theme('DarkGrey10')
+
+entries = []  # Creating entries list
+
+data = 'task3data.csv'  # Creating a variable for csv
+
+with open(data, 'r') as file:
+    reader = csv.reader(file)  # Creating an object
+    next(reader)  # Skipping the first row
+    for row in reader:  # For loop over rows
+        textbook = row[0]
+        subject = row[1]
+        seller = row[2]
+        purchasePrice = row[3]
+        purchaser = row[4]
+        salePrice = row[5]
+        rating = row[6]
+
+        # Appending lists in entries
+        entries.append([textbook, subject, seller, purchasePrice, purchaser, salePrice, rating])
+
+
+listbox = []  # Creating listbox values list
+for i in range(len(entries)):  # Iterating through all of entries
+    # Creating layout for listbox
+    listbox.append("{:<35} {:<20} {:<20} {:<20} {:<20} {:<20} {:<20} ".format(entries[i][0],
+                                                                              entries[i][1],
+                                                                              entries[i][2],
+                                                                              entries[i][3],
+                                                                              entries[i][4],
+                                                                              entries[i][5],
+                                                                              entries[i][6]))
+
+# Layout
+layout = [
+    [Sg.Text("{:<35} {:<20} {:<20} {:<20} {:<20} {:<20} {:<20}".format('Textbook:', 'Subject:', 'Seller:',
+                                                                       'Purchased for ($)', 'Purchaser:',
+                                                                       'Sold for ($)', 'Rating'),
+             size=(150, 1))],
+    [Sg.Listbox(listbox, size=(190, 15), key="listbox")],
+    [Sg.Button('Display All', key='Display')],
+    [Sg.Text("Rate a textbook:")],
+    [Sg.Text("Textbook:  "), Sg.Input('', key='t_input')],
+    [Sg.Text("Purchaser: "), Sg.Input('', key='p_input')],
+    [Sg.Button('Search')],
+    [Sg.Text("New Rating (1-5):"), Sg.Input('', key='newRating')],
+    [Sg.Button('Rate & Save', key='Rating')],
+    [Sg.Button("Exit")]
+    ]
+
+
+# Window
+window = Sg.Window('Task 3 GUI', layout, resizable=True, size=(1400, 600),
+                   text_justification='left', font=("Courier", 11))
+
+# While loop
+while True:
+    event, values = window.read()
+    if event in (None, "Quit"):
+        break
+    # Exit button
+    if event == "Exit":
+        window.close()
+    # Search function
+    newFilter = []
+    if event == 'Search':
+        #  if entries != blank continue else error
+        if values['t_input'] != "" and values['p_input'] != "":
+            for entry in entries:  # Iterate through entry (sub_lists)
+                if values['t_input'].lower() in str(entry[0]).lower()\
+                        and values['p_input'].lower() in str(entry[4]).lower():
+                    newFilter.append(entry)  # Appending list to filter list
+                    # Creating layout in listbox with filtered list
+                    newFilter = [("{:<35} {:<20} {:<20} {:<20} {:<20} {:<20} {:<20} ".format(entry[0],
+                                                                                             entry[1],
+                                                                                             entry[2],
+                                                                                             entry[3],
+                                                                                             entry[4],
+                                                                                             entry[5],
+                                                                                             entry[6]))]
+
+                    window["listbox"].update(values=newFilter)  # Update listbox with filter
+        else:
+            Sg.popup("Sorry, there was no match. Let's try again.")
+
+    if event == 'Rating':
+        ratingValidation = ("1", "2", "3", "4", "5")
+        # Validation
+        if values['newRating'] not in ratingValidation:  # Validate if rating is 1-5
+            Sg.popup("Rating input error")
+            continue
+        # Validate if filter is selected
+        if values['t_input'] == "" or values['t_input'] not in str(entries) or values['p_input']\
+                == "" or values['p_input'] not in str(entries):
+            Sg.popup("No filter selected")
+            continue
+        for entry in entries:  # List in lists
+            if values['t_input'] in str(entry) and values['p_input'] in str(entry):  # If inputs are valid
+                entry[6] = values['newRating']  # Change rating value for filter
+        with open('newData.csv', 'w', newline='') as new_csv:  # Opening csv writer
+            writer = csv.writer(new_csv)  # Writer object
+            writer.writerows(entries)  # Writing rows of entries for new csv file
+            newLb = []  # Defining list
+            for i in range(len(entries)):  # Iterating entries in newLb values
+                newLb.append("{:<35} {:<20} {:<20} {:<20} {:<20} {:<20} {:<20} ".format(entries[i][0],
+                                                                                        entries[i][1],
+                                                                                        entries[i][2],
+                                                                                        entries[i][3],
+                                                                                        entries[i][4],
+                                                                                        entries[i][5],
+                                                                                        entries[i][6]))
+            window["listbox"].update(values=newLb)  # Updating listbox with new csv file values
+            Sg.popup("New rating has been applied. Saving output file")
+
+    # Display event
+    if event == 'Display':
+        # Validation
+        try:  # update with newLb values if exists else keep as same
+            window["listbox"].update(values=newLb)
+        except NameError:
+            window["listbox"].update(values=listbox)
+            continue
